@@ -540,6 +540,8 @@ section .container { position:relative; z-index:1; }
 #workflow-sec { background:linear-gradient(160deg,#f0f0f5 0%,var(--cream) 80%)!important; }
 #scoring-sec { background:linear-gradient(160deg,#f5eaf0 0%,var(--white) 80%)!important; }
 #sources-sec { background:linear-gradient(160deg,#eaf2eb 0%,var(--cream) 80%)!important; }
+#cleaning-sec { background:linear-gradient(160deg,#eff6ff 0%,var(--white) 80%)!important; }
+#cleaning-sec .sec-eye { background:#eff6ff!important; border-color:#bfdbfe!important; color:#1d4ed8!important; }
 #objective .sec-eye   { background:#fff0f6!important; border-color:var(--pink-light)!important; color:var(--pink)!important; }
 #workflow-sec .sec-eye { background:#f0f0ff!important; border-color:#c7d2fe!important; color:#6366f1!important; }
 #scoring-sec .sec-eye { background:#fff5f0!important; border-color:#fcd9bd!important; color:#ea580c!important; }
@@ -688,7 +690,7 @@ footer { background:linear-gradient(135deg,#fff0f6,var(--white))!important; }
 }
 
 /* section wrappers get position:relative for stars */
-#hero, #objective, #workflow-sec, #scoring-sec, #sources-sec,
+#hero, #objective, #workflow-sec, #scoring-sec, #cleaning-sec, #sources-sec,
 #area-section, .psec, .panel-area-header { position:relative; overflow:hidden; }
 
 /* rec-card sparkle corner */
@@ -985,6 +987,7 @@ footer::before {
       <button class="nav-tab" onclick="goTo('#objective')">Objective</button>
       <button class="nav-tab" onclick="goTo('#workflow-sec')">Workflow</button>
       <button class="nav-tab" onclick="goTo('#scoring-sec')">Scoring</button>
+      <button class="nav-tab" onclick="goTo('#cleaning-sec')">🤖 AI Cleaning</button>
       <button class="nav-tab" onclick="goTo('#sources-sec')">📂 Data Sources</button>
     </div>
   </div>
@@ -1176,6 +1179,67 @@ footer::before {
 
 
 <!-- DATA SOURCES -->
+
+<!-- DATA CLEANING / AI ENRICHMENT -->
+<section id="cleaning-sec" style="border-top:2px solid var(--pink-soft);">
+  <div class="container">
+    <div class="sec-eye">Section 04</div>
+    <h2 class="sec-title">Data Cleaning & <span>AI Enrichment</span></h2>
+    <p style="font-size:13px;font-weight:600;color:var(--text-mid);margin-bottom:24px;max-width:640px;">
+      หลังจาก scrape raw data มาจาก Google Places แล้ว Claude AI ทำหน้าที่ clean, normalise และ enrich ข้อมูลก่อนนำไป score
+    </p>
+
+    <!-- Step flow -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px;">
+      <div class="sdim-card" style="border-left:4px solid #1d4ed8;">
+        <div style="font-size:20px;margin-bottom:8px;">🧹</div>
+        <div class="sdim-name">1. Merge & Deduplicate</div>
+        <div class="sdim-desc">ลบรายการซ้ำด้วย placeId · รวม field ที่ขาดหายจาก raw data</div>
+      </div>
+      <div class="sdim-card" style="border-left:4px solid #7c3aed;">
+        <div style="font-size:20px;margin-bottom:8px;">🏷️</div>
+        <div class="sdim-name">2. Normalise Fields</div>
+        <div class="sdim-desc">ปรับ priceLevel → ราคา/คน · จัดหมวด foodType · แปลง hours เป็น readable</div>
+      </div>
+      <div class="sdim-card" style="border-left:4px solid var(--pink);">
+        <div style="font-size:20px;margin-bottom:8px;">🤖</div>
+        <div class="sdim-name">3. Claude Enrichment</div>
+        <div class="sdim-desc">Claude วิเคราะห์ 6 fields ต่อร้าน: pros · cons · risk · uniqueness · noiseLevel · serviceSpeed</div>
+      </div>
+      <div class="sdim-card" style="border-left:4px solid #43754A;">
+        <div style="font-size:20px;margin-bottom:8px;">📊</div>
+        <div class="sdim-name">4. Store to Sheets</div>
+        <div class="sdim-desc">บันทึก Clean data แยก tab ต่อย่าน (5 tabs) ใน Google Sheets พร้อม upsert ด้วย placeId</div>
+      </div>
+    </div>
+
+    <!-- Claude Prompt sample -->
+    <div style="background:var(--white);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:16px;">
+      <div style="background:linear-gradient(135deg,#1e293b,#334155);padding:10px 18px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;font-weight:900;color:#94a3b8;letter-spacing:.1em;text-transform:uppercase;">Claude Enrichment Prompt</span>
+        <span style="margin-left:auto;font-size:10px;color:#64748b;">claude-sonnet-4-6</span>
+      </div>
+      <pre style="padding:16px 18px;font-size:11px;line-height:1.8;color:#334155;overflow-x:auto;margin:0;white-space:pre-wrap;font-family:'Courier New',monospace;background:#f8fafc;">Analyse this restaurant and return ONLY valid JSON (no markdown):
+{
+  "pros": "...",          // ข้อดีหลัก 1 ประโยค
+  "cons": "...",          // ข้อเสียหลัก 1 ประโยค  
+  "risk": "ต่ำ|กลาง|สูง", // ความเสี่ยงในการพา 8-12 คนไป
+  "uniqueness": "...",    // จุดเด่นที่แตกต่างจากร้านทั่วไป
+  "noiseLevel": "เงียบ|ปานกลาง|เสียงดัง",
+  "serviceSpeed": "เร็ว|ปานกลาง|ช้า"
+}</pre>
+    </div>
+
+    <!-- Fields enriched -->
+    <div style="background:var(--pink-pale);border:2px solid var(--border);border-radius:var(--r-sm);padding:14px 18px;font-size:12px;font-weight:700;color:var(--text-mid);">
+      📋 <strong>Clean Data Fields (19 columns):</strong>
+      name · area · foodType · rating · reviews · price · address · placeId · travelNote · hours · groupOk · sourceUrl · notes · scoreTotal ·
+      <span style="color:var(--pink);">pros · cons · risk · noiseLevel · serviceSpeed</span>
+      <span style="color:var(--text-soft);font-size:11px;margin-left:6px;">(🤖 enriched by Claude)</span>
+    </div>
+  </div>
+</section>
+
 <section id="sources-sec" style="background:var(--cream);border-top:2px solid var(--pink-soft);">
   <div class="container">
     <div class="sec-eye">Section 05</div>
